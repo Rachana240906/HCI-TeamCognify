@@ -1,0 +1,19 @@
+PRIMARY COMPARISON: Real Brain vs Synthetic Matched Control
+  Real Brain    balanced_acc = 0.317
+  Synthetic     balanced_acc = 0.300
+  Baseline      balanced_acc = 0.289
+  Cohen's d (Real - Synthetic) = 0.774
+  n_seeds = 4
+
+RESULT: Real Brain outperforms Synthetic by 0.017 balanced acc.
+Interpretation: Evidence CONSISTENT WITH an additional benefit of trial-specific brain content beyond generic statistical structure. However, with n=2 subjects this cannot be interpreted as causal proof.
+Alternative explanations: Covariance matching may be incomplete; real iEEG noise patterns may act as a beneficial regulariser in ways not captured by Gaussian synthetic control.
+
+LIMITATIONS:
+  - Only 2 subjects (sub-14, sub-15) available.
+  - No cross-subject statistical test possible (n < 3).
+  - Synthetic control is multivariate Gaussian — does not match
+    higher-order statistics or non-Gaussian marginals.
+  - Results are condition-specific to this dataset, task, and
+    model architecture.
+  - Early stopping on small val set (n=35) may be noisy.

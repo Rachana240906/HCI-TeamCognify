@@ -1,0 +1,225 @@
+{
+  "config": {
+    "target_sfreq": 256,
+    "bandpass_low": 1.0,
+    "bandpass_high": 100.0,
+    "notch_freqs": [
+      50.0,
+      100.0
+    ],
+    "artifact_amp_uV": 1000.0,
+    "epoch_tmin": 1.0,
+    "epoch_tmax": 5.0,
+    "eeg_channel_strategy": "common",
+    "ieeg_representation": "bandpower",
+    "ieeg_bands": {
+      "theta": [
+        4.0,
+        8.0
+      ],
+      "gamma": [
+        30.0,
+        80.0
+      ]
+    },
+    "normalise": true
+  },
+  "common_eeg_channels": [
+    "A1",
+    "A2",
+    "C3",
+    "C4",
+    "Cz",
+    "F3",
+    "F4",
+    "F7",
+    "F8",
+    "Fp1",
+    "Fp2",
+    "Fz",
+    "O1",
+    "O2",
+    "P3",
+    "P4",
+    "Pz",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+  ],
+  "setsize_map": {
+    "4": 0,
+    "6": 1,
+    "8": 2
+  },
+  "sessions": [
+    {
+      "subject": "sub-14",
+      "session": "ses-04",
+      "events_clean": 47,
+      "epochs_kept": 47,
+      "native_sfreq_eeg": 4000.0,
+      "native_sfreq_ieeg": 4000.0,
+      "n_eeg_channels": 21,
+      "brain_rep_dim": 128,
+      "setsize_dist": {
+        "4": 17,
+        "6": 11,
+        "8": 19
+      },
+      "match_dist": {
+        "IN": 25,
+        "OUT": 22
+      }
+    },
+    {
+      "subject": "sub-14",
+      "session": "ses-05",
+      "events_clean": 46,
+      "epochs_kept": 45,
+      "native_sfreq_eeg": 4000.0,
+      "native_sfreq_ieeg": 4000.0,
+      "n_eeg_channels": 21,
+      "brain_rep_dim": 128,
+      "setsize_dist": {
+        "4": 23,
+        "6": 8,
+        "8": 14
+      },
+      "match_dist": {
+        "IN": 27,
+        "OUT": 18
+      }
+    },
+    {
+      "subject": "sub-14",
+      "session": "ses-07",
+      "events_clean": 47,
+      "epochs_kept": 47,
+      "native_sfreq_eeg": 4000.0,
+      "native_sfreq_ieeg": 4000.0,
+      "n_eeg_channels": 21,
+      "brain_rep_dim": 128,
+      "setsize_dist": {
+        "4": 16,
+        "6": 21,
+        "8": 10
+      },
+      "match_dist": {
+        "IN": 26,
+        "OUT": 21
+      }
+    },
+    {
+      "subject": "sub-14",
+      "session": "ses-08",
+      "events_clean": 46,
+      "epochs_kept": 46,
+      "native_sfreq_eeg": 4000.0,
+      "native_sfreq_ieeg": 4000.0,
+      "n_eeg_channels": 21,
+      "brain_rep_dim": 128,
+      "setsize_dist": {
+        "4": 16,
+        "6": 18,
+        "8": 12
+      },
+      "match_dist": {
+        "IN": 28,
+        "OUT": 18
+      }
+    },
+    {
+      "subject": "sub-15",
+      "session": "ses-01",
+      "events_clean": 50,
+      "epochs_kept": 45,
+      "native_sfreq_eeg": 4096.0,
+      "native_sfreq_ieeg": 4096.0,
+      "n_eeg_channels": 21,
+      "brain_rep_dim": 128,
+      "setsize_dist": {
+        "4": 22,
+        "6": 15,
+        "8": 8
+      },
+      "match_dist": {
+        "IN": 22,
+        "OUT": 23
+      }
+    },
+    {
+      "subject": "sub-15",
+      "session": "ses-02",
+      "events_clean": 50,
+      "epochs_kept": 46,
+      "native_sfreq_eeg": 4096.0,
+      "native_sfreq_ieeg": 4096.0,
+      "n_eeg_channels": 21,
+      "brain_rep_dim": 128,
+      "setsize_dist": {
+        "4": 19,
+        "6": 11,
+        "8": 16
+      },
+      "match_dist": {
+        "IN": 20,
+        "OUT": 26
+      }
+    },
+    {
+      "subject": "sub-15",
+      "session": "ses-03",
+      "events_clean": 50,
+      "epochs_kept": 49,
+      "native_sfreq_eeg": 4096.0,
+      "native_sfreq_ieeg": 4096.0,
+      "n_eeg_channels": 21,
+      "brain_rep_dim": 128,
+      "setsize_dist": {
+        "4": 20,
+        "6": 13,
+        "8": 16
+      },
+      "match_dist": {
+        "IN": 28,
+        "OUT": 21
+      }
+    },
+    {
+      "subject": "sub-15",
+      "session": "ses-04",
+      "events_clean": 50,
+      "epochs_kept": 46,
+      "native_sfreq_eeg": 4096.0,
+      "native_sfreq_ieeg": 4096.0,
+      "n_eeg_channels": 21,
+      "brain_rep_dim": 128,
+      "setsize_dist": {
+        "4": 16,
+        "6": 17,
+        "8": 13
+      },
+      "match_dist": {
+        "IN": 30,
+        "OUT": 16
+      }
+    }
+  ],
+  "split_sizes": {
+    "train": 197,
+    "val": 35,
+    "test": 139
+  },
+  "eeg_shape": [
+    197,
+    21,
+    1024
+  ],
+  "brain_shape": [
+    197,
+    128
+  ],
+  "elapsed_s": 969.5,
+  "smoke_test": false
+}

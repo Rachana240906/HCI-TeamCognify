@@ -1,0 +1,68 @@
+{
+  "synthetic": {
+    "type": "synthetic_matched",
+    "matched_properties": [
+      "per_feature_mean",
+      "per_feature_std",
+      "covariance"
+    ],
+    "not_matched": [
+      "higher_order_moments",
+      "non_gaussian_marginals",
+      "heavy_tails"
+    ],
+    "match_covariance": true,
+    "n_train": 197,
+    "n_val": 35,
+    "n_test": 139,
+    "dim": 128,
+    "mean_abs_error_mu": 0.037987951189279556,
+    "mean_abs_error_std": 0.03760172054171562,
+    "limitation": "Gaussian approximation does not capture non-Gaussian marginals, heavy tails, or non-linear dependencies in neural data.",
+    "verification": {
+      "label": "synthetic_train",
+      "n_real": 197,
+      "n_syn": 197,
+      "mean_abs_diff_mu": 0.037987951189279556,
+      "mean_abs_diff_std": 0.03760172054171562,
+      "max_abs_diff_mu": 0.1075824499130249,
+      "max_abs_diff_std": 0.12657231092453003
+    }
+  },
+  "shuffled": {
+    "type": "shuffled_brain",
+    "description": "Brain representations permuted across trials within each split. Trial-specific EEG-iEEG correspondence is destroyed. Marginal feature distribution is preserved exactly.",
+    "marginal_preserved": true,
+    "trial_correspondence_broken": true,
+    "limitation": "Shuffling within splits preserves the within-split marginal distribution exactly, but does not match any cross-trial structure. Cannot establish that benefit is task-specific vs. generic structure.",
+    "n_train": 197,
+    "n_val": 35,
+    "n_test": 139,
+    "verification": {
+      "label": "shuffled_train",
+      "n_real": 197,
+      "n_syn": 197,
+      "mean_abs_diff_mu": 4.681351128965616e-08,
+      "mean_abs_diff_std": 9.918585419654846e-08,
+      "max_abs_diff_mu": 2.1421364237994567e-07,
+      "max_abs_diff_std": 2.980232238769531e-07
+    }
+  },
+  "random": {
+    "type": "random_gaussian",
+    "matched_properties": [
+      "dimension"
+    ],
+    "not_matched": [
+      "mean",
+      "std",
+      "covariance",
+      "any_neural_statistics"
+    ],
+    "dim": 128,
+    "n_train": 197,
+    "n_val": 35,
+    "n_test": 139,
+    "note": "This is the weakest control: pure Gaussian noise at unit scale. Acts as a reference for whether any structured representation helps."
+  }
+}

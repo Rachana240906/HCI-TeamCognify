@@ -1,0 +1,95 @@
+# CD-B2M Master Configuration
+# All paths are relative to the CD-B2M/ project root unless absolute.
+
+# ─── Paths ────────────────────────────────────────────────────────────────────
+paths:
+  dataset_root:   "../dataset"          # BIDS dataset root
+  processed_dir:  "data/processed"      # output of preprocess.py
+  results_dir:    "results"
+  reports_dir:    "results/reports"
+  checkpoints_dir: "results/checkpoints"
+  logs_dir:       "logs"
+
+# ─── Subjects / Sessions ──────────────────────────────────────────────────────
+subjects:
+  - sub-14
+  - sub-15
+
+# Session splits (session-aware; no session spans train/test)
+# within_subject split: last N sessions per subject are the held-out OOD test set
+held_out_sessions:
+  sub-14: ["ses-07", "ses-08"]   # ~93 clean trials for OOD test
+  sub-15: ["ses-04"]             # ~50 clean trials for OOD test
+
+# ─── Preprocessing ────────────────────────────────────────────────────────────
+preprocessing:
+  target_sfreq:    256          # Hz — downsample both subjects to this rate
+  bandpass_low:    1.0          # Hz
+  bandpass_high:   100.0        # Hz
+  notch_freqs:     [50.0, 100.0]  # Hz (power line + first harmonic)
+  artifact_amp_uV: 1000.0       # per-channel peak-to-peak rejection threshold
+  epoch_tmin:      1.0          # s — maintenance window start (letter string shown 0-2s)
+  epoch_tmax:      5.0          # s — maintenance window end (probe at ~5s)
+  # Using maintenance+encoding window (1-5s) captures the core WM period
+  # and reduces sequence length from 2048 to 1024 timepoints at 256 Hz
+
+  # EEG channel selection strategy
+  # "common" = use only channels present in BOTH subjects (intersection of 10-20 set)
+  eeg_channel_strategy: "common"
+
+  # iEEG brain representation
+  # "bandpower" = log-band-power in theta and gamma per electrode per trial
+  # "raw"       = downsampled raw epoch (large; use for debugging only)
+  ieeg_representation: "bandpower"
+  ieeg_bands:
+    theta: [4.0, 8.0]
+    gamma: [30.0, 80.0]
+
+  # Normalisation — applied using TRAINING SET statistics only
+  normalise: true
+
+# ─── Splits ───────────────────────────────────────────────────────────────────
+splits:
+  val_fraction:  0.25   # increased from 0.15 → ~58 val trials (was 35, too noisy for early stopping)
+  random_seed:   42
+
+# ─── Labels ───────────────────────────────────────────────────────────────────
+labels:
+  primary:    "SetSize"        # 3-class: {4, 6, 8} → {0, 1, 2}
+  secondary:  "Match"          # binary: IN→1, OUT→0
+  label_map:                   # SetSize integer → class index
+    4: 0
+    6: 1
+    8: 2
+
+# ─── Model ────────────────────────────────────────────────────────────────────
+model:
+  type:          "GRU"
+  input_size:    null
+  hidden_size:   64
+  num_layers:    1
+  dropout:       0.3
+  bidirectional: false
+  proj_hidden:   32
+
+# ─── Training ─────────────────────────────────────────────────────────────────
+training:
+  batch_size:    16
+  max_epochs:    80
+  lr:            1e-3
+  weight_decay:  1e-4
+  patience:      15
+  grad_clip:     1.0
+  num_workers:   0              # DataLoader workers (0 = main thread, safe on Windows)
+  seeds:         [42, 123]      # 2 seeds for manageable runtime on CPU
+
+# ─── Brain-guided loss ────────────────────────────────────────────────────────
+brain_guidance:
+  alpha_values:  [0.1, 0.5]     # reduced for CPU runtime
+  loss_type:     "mse"                   # "mse" | "cosine"
+
+# ─── Smoke-test mode ──────────────────────────────────────────────────────────
+smoke_test:
+  enabled:   false
+  max_trials: 20     # use only this many trials per split when enabled
+  max_epochs: 3
