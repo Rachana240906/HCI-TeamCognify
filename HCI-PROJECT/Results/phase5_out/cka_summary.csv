@@ -1,0 +1,6 @@
+condition,mean,sem
+maxent,0.0226,0.0036
+no_align,0.0034,0.0005
+randnoise,0.0308,0.0049
+real,0.6899,0.0089
+shuffled,0.032,0.0065

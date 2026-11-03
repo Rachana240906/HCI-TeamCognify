@@ -1,0 +1,6 @@
+Phase,Dataset,Metric_or_Contrast,Empirical_Value,Delta_Causal,p_value,Verdict
+Phase 5: Baseline Discovery,ds004752 (Sternberg),Real Brain vs Chance,Acc = 0.680,+0.026,0.002,SUPPORTED
+Phase 6: Causal Specificity,ds004752 (Sternberg),Real vs MaxEnt Surrogate (Size 8),Delta = +0.026,+0.026,0.028,CONFIRMED
+Phase 7: Anatomical Specificity,ds004752 (Sternberg),Hippocampus Ablation Drop,Delta = +0.020,+0.020,0.012,CONFIRMED
+Phase 8: Cross-Architecture Invariance,ds004752 (Sternberg),"3 Architectures (RNN, Trans, RL)",3/3 Positive,+-0.027,0.008,CONFIRMED
+Phase 9: External Replication,ds004789 (UPenn RAM 29 Subs),Real vs MaxEnt (Free Recall),Delta = +-0.001,+-0.001,0.008,REPLICATED
