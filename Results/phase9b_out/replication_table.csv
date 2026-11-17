@@ -1,0 +1,5 @@
+Condition,Seeds,Val_Accuracy_Mean,Val_Accuracy_Std,CKA_Mean,CKA_Std
+Phase 8 Reference,5,1.0,0.0,0.0,0.0
+ds004789 Real Brain,5,0.76,0.011,0.005,0.001
+ds004789 MaxEnt,5,0.761,0.011,0.005,0.001
+ds004789 Phase Scrambled,5,0.76,0.011,0.007,0.001

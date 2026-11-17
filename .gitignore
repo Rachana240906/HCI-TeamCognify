@@ -1,0 +1,39 @@
+# Raw EEG/iEEG datasets
+Results/data/
+
+# Downloaded and generated caches
+Results/cache_fr1/
+
+# Python temporary files
+__pycache__/
+*.pyc
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+.venv/
+
+# Downloaded datasets
+Results/data/
+Results/ds004789/
+
+# Generated caches
+Results/cache_fr1/
+
+# Model checkpoints and binary arrays
+*.pt
+*.npy
+*.npz
+
+# Python temporary files
+__pycache__/
+*.pyc
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+.venv/

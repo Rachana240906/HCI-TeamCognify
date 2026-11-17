@@ -1,0 +1,3 @@
+Comparison,Delta_Causal,t_stat,p_val
+Real Brain vs MaxEnt (ds004789),-0.0008,-0.113,0.913
+Real Brain vs Phase Scramble (ds004789),0.0,0.0,1.0

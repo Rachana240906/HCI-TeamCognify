@@ -1,0 +1,17 @@
+project: CD-B2M
+seed: 42
+seeds: [0, 1, 2, 3, 4]        # multiple seeds for statistics later
+
+dataset:
+  name: ds004752
+  openneuro_id: ds004752
+
+paths:
+  # Filled automatically by src/utils.py depending on environment
+  data_root: data/ds004752
+  cache_dir: cache
+  results_dir: results
+
+conditions: [real, maxent, shuffled, random]
+architectures: [rnn, transformer, rl]
+regions: [hippocampus, ofc, entorhinal, cingulate]   # may change at Phase 1.4
