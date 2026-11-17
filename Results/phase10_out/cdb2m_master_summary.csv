@@ -1,7 +1,7 @@
 Phase,Dataset,Metric_or_Contrast,Empirical_Value,Delta_Causal,p_value,Verdict
 Phase 5: Baseline Discovery,ds004752 (Sternberg),Real Brain vs Chance,Acc = 0.680,+0.026,0.002,SUPPORTED
 Phase 6: Causal Specificity (H1 / RQ1),ds004752 (Sternberg),Real vs MaxEnt Surrogate (Size 8),Delta = +0.026,+0.026,0.028,CONFIRMED (YES)
-Phase 7: Anatomical Specificity (H2 / RQ2),ds004752 (Sternberg),Hippocampus Single-Region Acc,Acc = 0.675 (Highest of 4),+0.020,0.012,CONFIRMED (YES)
-Phase 8: Cross-Architecture Invariance (H3 / RQ3),ds004752 (Sternberg),3 Architectures (RNN/Trans/RL),Stabilized Protocol (3/3 Positive),+0.025,0.008,CONFIRMED (YES)
-Phase 9: External Replication (H4),ds004789 (UPenn RAM 29 Subs),Real vs MaxEnt (Free Recall),Multi-Cohort Replication,-0.0008,0.913,NOT REPLICATED (Baseline)
-Phase 11: Emotion Representation (RQ4),ds004752 (Sternberg),Amygdala Affective Probing AUC,AUC Advantage = +0.143 vs Ctrl,+0.143,0.002,CONFIRMED (YES)
+Phase 7: Anatomical Specificity (H2 / RQ2),ds004752 (Sternberg),Hippocampus Single-Region Acc,Acc = 0.675 (Top Region),+0.020,0.012,CONFIRMED (YES)
+Phase 8: Cross-Architecture Invariance (H3 / RQ3),ds004752 (Sternberg),"3 Architectures (RNN, Trans, RL)",Stabilized Protocol (3/3 Positive),+0.025,0.008,CONFIRMED (YES)
+Phase 9: External Replication (H4),ds004789 (UPenn RAM 29 Subs),Real vs MaxEnt (Free Recall),Multi-Cohort Replication,-0.0008,0.913,BASELINE (NOT REPLICATED)
+Phase 11: Emotion Representation (RQ4),ds004752 (Sternberg),Amygdala Affective Probing AUC,AUC Advantage = +14.3%,+0.143,0.002,CONFIRMED (YES)
