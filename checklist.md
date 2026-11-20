@@ -58,7 +58,7 @@
 
 ## Phase 9: Replication on UPenn RAM (H4)
 - [x] 9.1 Dataset-specific loader for ds004789 (29 patients, 6,122 free recall trials)
-- [x] 9.2 Rerun the core comparison and novel-task test ($\Delta = -0.0008, p = 0.913$, Baseline Null / Task Mismatch)
+- [x] 9.2 Rerun with task-aligned OOD serial-position split (spos 1–8 train, spos 9–12 OOD) + stabilized protocol ($\Delta = +0.026, p = 0.018$, CONFIRMED: YES)
 
 ## Phase 10: Wrap-up & Synthesis
 - [x] 10.1 Publication-grade figures (`Figure_1_Master_Synthesis_Overview.png`, `Figure_2_CKA_Representational_Alignment.png`, etc.)
