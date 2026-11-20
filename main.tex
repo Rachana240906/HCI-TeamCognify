@@ -3,7 +3,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{microtype}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{array}
@@ -13,8 +13,7 @@
 \usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
 \usepackage{url}
 
-% Figures 1 and 2 are enabled to showcase the master synthesis and CKA alignment.
-% float tuning: avoids nearly empty float pages
+% ---------- float tuning ----------
 \setcounter{dbltopnumber}{3}
 \renewcommand{\dbltopfraction}{0.9}
 \renewcommand{\topfraction}{0.9}
@@ -22,10 +21,17 @@
 \renewcommand{\textfraction}{0.1}
 \renewcommand{\floatpagefraction}{0.8}
 \renewcommand{\dblfloatpagefraction}{0.8}
-\newif\ifshowflagged
-\showflaggedtrue
 
+% ---------- theorem-like environments ----------
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+
+% ---------- macros ----------
 \newcommand{\dcausal}{\Delta_{\mathrm{causal}}}
+\newcommand{\Acc}{\mathrm{Acc}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\NCE}{\mathcal{L}_{\mathrm{NCE}}}
+\newcommand{\Ltask}{\mathcal{L}_{\mathrm{task}}}
 
 \title{Causally-Disentangled Brain-to-Model Transfer (CD-B2M): Does Aligning Neural Networks to Intracranial Brain Embeddings Transfer Computational Structure or Act as a Structured-Noise Regularizer?}
 
@@ -38,37 +44,37 @@
 \end{minipage}}
 
 \author{\parbox{\textwidth}{\small\centering
-\authcell{Sudhakar Mishra}{Assistant Professor (Project Guide)}\hfill
-\authcell{Rachana Bonigala}{U24AI064}\par\vspace{2ex}
-\authcell{Neha Sharma}{U24AI050}\hfill
-\authcell{Golla Abhinav Kumar}{U24AI019}\par\vspace{2ex}
-\authcell{Chris Misquith}{U24AI002}\hfill
-\authcell{Archana Deshmukh}{U24AI077}}}
+\hfill
+\authcell{Rachana Bonigala}{U24AI064}\hfill
+\authcell{Neha Sharma}{U24AI050}\par\vspace{2ex}
+\authcell{Golla Abhinav Kumar}{U24AI019}\hfill
+\authcell{Chris Misquith}{U24AI002}\par\vspace{2ex}
+\authcell{Archana Deshmukh}{U24AI077}\hfill
+\authcell{Sudhakar Mishra}{Assistant Professor (Project Guide)}}}
 
 \begin{document}
 \maketitle
 
 % =================================================================
 \begin{abstract}
-Brain2Model (B2M) transfer improves artificial networks by aligning their internal
-representations to neural recordings, but it has remained an open question whether the gains reflect a genuine transfer of
-task-relevant computational structure or merely an implicit regularization effect that exploits structured
-noise. We introduce \emph{CD-B2M}, a causal evaluation framework that contrasts alignment with real
-human intracranial EEG (iEEG) embeddings against three noise-matched surrogates (maximum-entropy
-Gaussian matching 1/f spectral power and cross-covariance, trial-shuffled brain, and random noise) using an InfoNCE alignment loss and linear
-CKA. Using the Sternberg verbal working-memory dataset ds004752 (15 patients, 3{,}353 trials,
-3{,}185 clean), we train recurrent (SeqGRU), Transformer (SeqTransformer) and reinforcement-learning (REINFORCE)
-students across multiple random seeds and evaluate them on held-out loads, longer sequences and unseen letters.
-\textbf{RQ1 (Causal Specificity):} real-brain alignment causally outperforms the strongest noise-matched MaxEnt control on novel working-memory loads (set size 8, $\dcausal=+0.026$, $p=0.028$, bootstrap 95\% CI $[+0.016,+0.028]$ excluding zero), while representational geometry alignment strongly predicts downstream generalization ($r=0.99$, $p<0.001$).
-\textbf{RQ2 (Anatomical Specificity):} the hippocampus is confirmed as the primary driver of working-memory transfer gains (top single-region OOD accuracy $0.675$, $\dcausal=+0.021$, $p=0.012$; ablation induces the largest drop, $-0.016$, $p=0.009$), confirming a clear regional hierarchy (Hippocampus $>$ Parahippocampal $>$ Lateral Temporal $>$ Amygdala).
-\textbf{RQ3 (Cross-Architecture Invariance):} while uncalibrated alignment exhibits optimization fragility, our stabilized alignment protocol (calibrated $\lambda=0.1$, Pre-LayerNorm projection heads, advantage baseline subtraction, and memory-circuit pruning) achieves positive transfer across all three architectures (mean $\dcausal=+0.025$, $p=0.008$).
-\textbf{H4 (External Replication):} multi-cohort replication on UPenn RAM (ds004789, 29 patients, 6{,}122 trials) is confirmed under a task-aligned serial-position OOD split ($\dcausal=+0.026$, $p=0.018$, bootstrap CI $[+0.014,+0.038]$).
-\textbf{RQ4 (Affective Representation):} linear readout probing on amygdalar latent spaces decodes affective error-conflict feedback (ROC-AUC $=0.571$ vs.\ $0.428$ control, $+14.3\%$ advantage, $p=0.002$), establishing a double dissociation between cognitive memory indexing in the hippocampus and affective representation in the amygdala.
-Together, these findings demonstrate that B2M transfer imparts genuine biological computational structure rather than acting as a non-specific noise regularizer.
+Brain2Model (B2M) transfer aligns the internal representations of an artificial network to neural recordings, but it is
+unclear whether the resulting gains reflect transferred task-relevant computational structure or merely an implicit
+regularization effect. We introduce \emph{CD-B2M}, a causal evaluation framework that contrasts alignment to real
+human intracranial EEG (iEEG) embeddings with three surrogates: a maximum-entropy Gaussian that matches per-coordinate means and variances,
+a trial-shuffled brain control, and global random noise. Alignment uses a symmetric InfoNCE loss and is quantified with linear CKA.
+On the Sternberg working-memory dataset ds004752 (15 patients, 3{,}185 clean trials) with a cross-patient (subject-grouped) protocol, we train recurrent (GRU),
+Transformer and REINFORCE students over five seeds and evaluate them on held-out loads, longer sequences and unseen letters.
+\textbf{RQ1:} real-brain alignment exceeds the best surrogate on the novel load (set size 8) by $\dcausal=+0.022$ (per-seed estimator; bootstrap 95\% CI $[+0.016,+0.028]$; $+0.026$ for the aggregate estimator),
+but not on the other OOD splits, and the effect does not survive Benjamini--Hochberg correction across splits ($q\gtrsim0.11$).
+\textbf{RQ2:} aligning to the hippocampus alone gives the highest size-8 accuracy ($0.675$; hierarchy Hippocampus $>$ Parahippocampal $>$ Amygdala $>$ Lateral Temporal), yet leave-one-region-out ablation of the hippocampus does \emph{not} reduce accuracy (mean ablation effect $-0.016$, i.e.\ removal slightly improves it).
+\textbf{RQ3:} uncalibrated alignment yields non-positive transfer in all architectures; a post hoc stabilized protocol yields positive transfer in all three (pooled $\dcausal=+0.025$).
+\textbf{H4:} replication on UPenn RAM (ds004789, 29 patients) is null under a random split and positive ($\dcausal=+0.026$) only under a post hoc serial-position split.
+\textbf{RQ4:} a linear probe on amygdala-aligned latents decodes error feedback (AUC $0.571$ vs.\ $0.5$ chance, $p=0.002$), but this is confounded with memory load.
+We conclude that the data are \emph{consistent with} a small, split-specific biological advantage over noise surrogates, but they do not establish it; we detail the statistical and design limitations that prevent a stronger claim.
 \end{abstract}
 
 \begin{IEEEkeywords}
-brain-to-model transfer, intracranial EEG, representation alignment, CKA, InfoNCE, out-of-distribution generalization, working memory
+brain-to-model transfer, intracranial EEG, representation alignment, CKA, InfoNCE, out-of-distribution generalization, working memory, cross-patient evaluation
 \end{IEEEkeywords}
 
 % =================================================================
@@ -78,63 +84,52 @@ memory extrapolates gracefully across set sizes and sequence lengths. A recent l
 asks whether neural data can serve as a \emph{teacher} for artificial networks.
 Li et al.~\cite{li2019brains} regularized convolutional networks with similarity structure
 measured in mouse visual cortex and reported improved robustness to noise and adversarial
-perturbations, arguing that brain data can create a useful inductive bias.
-Gallo Aquino et al.~\cite{aquino2025b2m} generalized this idea to \emph{Brain2Model (B2M)
-Transfer}, where human neural activity during sensory and decision-making tasks acts as a teacher
+perturbations. Gallo Aquino et al.~\cite{aquino2025b2m} generalized this idea to \emph{Brain2Model (B2M)
+Transfer}, where human neural activity acts as a teacher
 through (i) a contrastive objective aligning brain and network activations and (ii) regression of
 brain-derived latent features; student networks converged faster and reached higher accuracy than
 networks trained in isolation.
 
-These results raise a fundamental causal question. A network trained with an auxiliary alignment loss to
+These results raise a causal question. A network trained with an auxiliary alignment loss to
 \emph{any} high-dimensional, structured signal may improve simply because the loss acts as a
-regularizer. Cautionary evidence comes from the language--brain literature: Hadidi et
-al.~\cite{hadidi2026spurious} showed that apparent alignment between large language models and
+regularizer. Hadidi et al.~\cite{hadidi2026spurious} showed that apparent alignment between large language models and
 brains can arise from non-robust methods (e.g., shuffled train--test splits) and overlooked
-confounds such as positional signals and word rate, with a simple autocorrelation baseline matching
-trained models. The same logic applies to B2M: without noise-matched controls, a gain
+confounds, with a simple autocorrelation baseline matching trained models. The same logic applies to B2M: without noise-matched controls, a gain
 cannot be attributed to transferred biological structure.
 
 \paragraph{Related work.}
-\emph{Neural data as a regularizer.} Li et al.~\cite{li2019brains} recorded the responses of
-$\sim$8{,}000 mouse visual-cortex neurons to natural images, denoised them with a predictive model, and
-used the resulting image-by-image similarity matrix to regularize the intermediate layers of a ResNet18
-trained on CIFAR10. The regularized network kept its clean-image accuracy but was clearly more
+\emph{Neural data as a regularizer.} Li et al.~\cite{li2019brains} used a similarity matrix of $\sim$8{,}000 mouse visual-cortex neurons to regularize a ResNet18
+trained on CIFAR10. The regularized network kept its clean accuracy but was more
 robust to noisy images ($\sim$50\% vs.\ $\sim$20\% at the highest noise level) and to adversarial
-perturbations, whereas regularizing toward random similarity structure or a pretrained VGG helped
-substantially less; the authors present this as evidence that neural data can supply an inductive bias.
-Gallo Aquino et al.~\cite{aquino2025b2m} extended the idea to \emph{Brain2Model (B2M)} transfer with a
-loss $L=(1-\alpha)L_{\text{task}}+\alpha L_{\text{transfer}}$, using either a contrastive InfoNCE
-objective on paired brain and model embeddings or a latent mean-squared-error transfer. In a
-memory-based goal-switching task, a GRU agent aligned to 7-dimensional CEBRA embeddings of
-371 neurons (17 sessions, 6 epilepsy patients) reached 0.987 test accuracy at $\alpha=0.02$ against
-0.967 without transfer, and converged faster; a variational autoencoder for driving-scene reconstruction
-aligned to scalp EEG improved in the same way. Importantly, they ran 10 control runs per $\alpha$ with standard Gaussian noise in place of brain
-embeddings and found that noise performed \emph{worse} than no transfer. Our study builds directly on this
-design: we use the same InfoNCE alignment, but add stronger surrogates
+perturbations, whereas regularizing toward random similarity structure helped
+substantially less. Gallo Aquino et al.~\cite{aquino2025b2m} extended the idea to B2M with the loss $L=(1-\alpha)L_{\text{task}}+\alpha L_{\text{transfer}}$, using a contrastive InfoNCE
+objective or a latent mean-squared-error transfer. In a
+memory-based goal-switching task, a GRU aligned to CEBRA embeddings of
+371 neurons reached 0.987 test accuracy at $\alpha=0.02$ against
+0.967 without transfer. They also ran control runs with standard Gaussian noise in place of brain
+embeddings and found that noise performed \emph{worse} than no transfer. We build on this
+design with the same InfoNCE alignment, but add stronger surrogates
 (maximum-entropy, trial-shuffled) that preserve more of the statistics of real recordings, and we test generalization to novel
 task variants rather than in-distribution accuracy.
 
-\emph{Spurious brain--model alignment.} In the language domain, Hadidi et
-al.~\cite{hadidi2026spurious} re-analysed three neural datasets (fMRI passages, ECoG sentences and
-fMRI stories) used to claim that large language models predict brain activity. They showed that
+\emph{Spurious brain--model alignment.} Hadidi et
+al.~\cite{hadidi2026spurious} re-analysed three neural datasets and showed that
 shuffled train--test splits inflate neural predictivity because neighbouring time points are
-autocorrelated: an orthogonal-autocorrelated-sequences baseline (OASM) that encodes nothing but temporal
-adjacency matched or beat GPT2-XL under shuffled splits and accounted for most of its predictivity; layer-wise
-patterns reversed between shuffled and contiguous splits; and positional signals plus word rate
-accounted for nearly all of the predictivity of an \emph{untrained} GPT2-XL. Their message is that apparent
-brain--model alignment can arise from non-robust methods and overlooked confounds, and that simple
-control models are essential. We adopt the same philosophy: subject-grouped splits (no shuffling
+autocorrelated, and that positional signals and word rate accounted for most of the predictivity of an \emph{untrained} language model. We adopt the same philosophy: subject-grouped splits (no shuffling
 across subjects), leakage checks, and explicit noise-matched controls.
 
 \paragraph{Problem statement.}
 It is unknown whether performance gains from aligning artificial representations to brain
-embeddings reflect genuine transfer of computational structure or merely a sophisticated
-regularizer exploiting structured noise.
+embeddings reflect genuine transfer of computational structure or merely a regularizer exploiting structured noise.
 
-\paragraph{Hypothesis.}
-If brain-derived embeddings encode task-relevant abstract structure rather than noise
-statistics, models aligned to real brain embeddings should generalize systematically better (e.g., higher
-zero-shot transfer to novel task variants) than models aligned to noise-matched synthetic surrogates of identical spectral and statistical properties.
+\paragraph{Hypotheses.}
+Let $\dcausal$ denote the causal contrast defined in Section~\ref{sec:stats}.
+\begin{itemize}
+  \item[\textbf{H1}] $\dcausal>0$ on at least one OOD split: models aligned to real brain embeddings generalize better than models aligned to every noise-matched surrogate.
+  \item[\textbf{H2}] The contribution is anatomically non-uniform, with medial temporal regions contributing most.
+  \item[\textbf{H3}] The sign of $\dcausal$ is invariant across recurrent, attention and policy-gradient students.
+  \item[\textbf{H4}] The effect replicates in an independent cohort.
+\end{itemize}
 
 \paragraph{Research questions.}
 \begin{enumerate}
@@ -146,10 +141,11 @@ zero-shot transfer to novel task variants) than models aligned to noise-matched 
 \end{enumerate}
 
 \paragraph{Contributions.}
-(i) A control-based protocol (CD-B2M) with three surrogate families and a causal contrast
-$\dcausal$; (ii) a leakage-checked, subject-grouped evaluation with synthetic OOD task variants
-that avoid ceiling effects; (iii) region-ablation, cross-architecture and multi-cohort replication analyses;
-(iv) a stabilized alignment protocol that resolves cross-architecture transfer; and (v) empirical identification of affective representations and limbic-memory double dissociation.
+(i) A control-based protocol (CD-B2M) with three surrogate families, a formal causal contrast $\dcausal$ and an explicit gain decomposition;
+(ii) a leakage-checked, cross-patient evaluation with synthetic OOD task variants that avoid ceiling effects;
+(iii) region-ablation, cross-architecture and multi-cohort replication analyses;
+(iv) a stabilized alignment protocol for cross-architecture transfer; and
+(v) a probing analysis of affective representations, together with a candid account of where the evidence is weak.
 
 % =================================================================
 \section{Methods}
@@ -162,83 +158,139 @@ and probe (3\,s) epochs. Overall accuracy was 0.908 (0.977, 0.903 and 0.845 for 
 Electrodes were assigned to four regions from the Brainnetome labels: hippocampus (426 electrode-session channels, 97 unique), amygdala (165 channels, 39 unique), parahippocampal gyrus (150 channels, 31 unique) and lateral temporal cortex (1{,}520 channels, 332 unique; STG, MTG, ITG, pSTS).
 
 \textbf{Replication cohort.} UPenn RAM \texttt{ds004789} (free recall, FR1): 29 processed
-sessions, 6{,}122 word-encoding trials, mean recall rate 0.244.
+sessions, 6{,}122 word-encoding trials, mean recall rate 0.244 (hence a majority-class accuracy of $\approx0.756$).
 
 \subsection{Preprocessing and brain features}
-Each trial was converted to a tensor of shape $4\ \text{regions}\times16\ \text{time bins}\times5\ \text{bands}$
-(theta, alpha, beta, low gamma, high gamma; 0.5\,s bins), z-scored per session; regions not recorded in a
-session were set to NaN and masked in the encoder. Normalization used all clean trials of a session,
-including held-out loads; it is unsupervised but transductive, which we note in our methodology.
+Each trial $j$ of patient $s$ is a tensor $\mathbf X_{sj}\in\mathbb R^{R\times T\times B}$ with
+$R=4$ regions, $T=16$ time bins (0.5\,s) and $B=5$ bands
+(theta, alpha, beta, low gamma, high gamma), z-scored per session. A binary mask $m_{sjr}\in\{0,1\}$ marks
+whether region $r$ was recorded; unrecorded regions are set to NaN and excluded by masked pooling.
+Normalization used all clean trials of a session, including held-out loads; it is unsupervised but transductive.
 
-\subsection{Splits and leakage checks}
-We built five subject-grouped folds balanced by acquisition group (2000 Hz vs.\ 4000/4096 Hz) with
-train/validation on loads $\{4,6\}$ and test sets on new subjects (loads 4/6 as in-distribution,
-load 8 as OOD). Automated checks verified that subjects and rows are disjoint, no load-8 trials
-are in training, only clean trials are used, and every subject is a test subject exactly once.
+\subsection{Cross-patient evaluation protocol}
+Let $\mathcal S$ be the set of $|\mathcal S|=15$ patients. We partition $\mathcal S$ into $K=5$ disjoint folds $\{\mathcal S_k\}_{k=1}^K$ (about three patients each), balanced by acquisition group (2000\,Hz vs.\ 4000/4096\,Hz).
+For fold $k$, alignment training uses brain tensors only from $\mathcal S^{(k)}_{\mathrm{tr}}=\mathcal S\setminus\mathcal S_k$ with loads $\{4,6\}$, so
+\begin{equation}
+  \mathcal S_k\cap\mathcal S^{(k)}_{\mathrm{tr}}=\emptyset,\qquad \bigcup_{k}\mathcal S_k=\mathcal S,\qquad \mathcal S_k\cap\mathcal S_{k'}=\emptyset\ (k\neq k').
+\end{equation}
+Held-out patients are therefore never seen during alignment, which makes every brain-side evaluation \emph{cross-patient}: the model must benefit from a
+population-level brain signal rather than from patient-specific idiosyncrasies. Automated checks verified disjointness of subjects and rows, absence of load-8 trials in training, use of clean trials only, and that every subject is a test subject exactly once. OOD performance is measured on synthetic suites (Section~\ref{sec:synth}).
 
 \textbf{Decoding gate.} Leave-one-subject-out logistic regression with a within-subject label-permutation
 null showed that brain features decode load 4 vs.\ 8 above chance (maintenance window:
 balanced accuracy 0.553, $p_{\text{perm}}=0.002$; all three windows: 0.570, $p=0.002$), while
 match IN/OUT was near chance (best: probe window, 0.526, $p=0.020$, uncorrected).
 
-\subsection{Synthetic tasks}
+\subsection{Synthetic tasks}\label{sec:synth}
 Because the recorded stimuli are letter sets, we generated a surrogate memory-set task: the
-model receives a set of letters, a separator and a probe letter and must report whether the probe
-is in the set. Evaluation suites contain 1{,}000 sequences each: in-distribution (sizes 4/6),
+model receives a set $\mathcal A$ of letters, a separator and a probe letter $q$ and must output $y=\mathbb 1[q\in\mathcal A]$. Evaluation suites contain 1{,}000 sequences each: in-distribution (sizes 4/6),
 \texttt{size\_8}, \texttt{len\_10}, \texttt{len\_12} (longer sets), and \texttt{unseen\_letters}
 (6 held-out letters, sizes 4/5). A ceiling check on a brain-free GRU confirmed headroom on the OOD axes.
 
 \subsection{Control conditions}
-All conditions use the same encoder and alignment loss; only the brain tensor changes.
-\begin{itemize}
-  \item \textbf{Real}: recorded iEEG features.
-  \item \textbf{MaxEnt}: per-region/time/band Gaussian samples with the real mean and variance
-        (marginal statistics matched, trial structure destroyed); NaN mask preserved.
-  \item \textbf{Shuffled}: trial order permuted within each subject$\times$session block (all
-        marginal and within-trial structure preserved, link to labels destroyed).
-  \item \textbf{RandNoise}: Gaussian noise matched only to the global mean and standard deviation.
-\end{itemize}
+All conditions use the same encoder and alignment loss; only the brain tensor changes. Let $x_{sj\,rtb}$ be one coordinate of $\mathbf X_{sj}$, $\mu_{rtb}$ and $\sigma^2_{rtb}$ its mean and variance over trials, and $\bar\mu,\bar\sigma^2$ the global moments.
+\begin{align}
+  &\textbf{Real:} && \tilde x_{sj\,rtb}=x_{sj\,rtb},\notag\\
+  &\textbf{MaxEnt:} && \tilde x_{sj\,rtb}\overset{\text{iid}}{\sim}\mathcal N(\mu_{rtb},\sigma^2_{rtb}),\notag\\
+  &\textbf{Shuffled:} && \tilde{\mathbf X}_{sj}=\mathbf X_{s,\pi_b(j)},\ \pi_b\sim\mathrm{Unif}(\mathrm{Sym}(n_b)),\notag\\
+  &\textbf{RandNoise:} && \tilde x_{sj\,rtb}\overset{\text{iid}}{\sim}\mathcal N(\bar\mu,\bar\sigma^2),\notag
+\end{align}
+where $\pi_b$ permutes trials within each subject$\times$session block $b$ of size $n_b$, and the NaN mask is preserved in all conditions.
+
+\begin{proposition}[Maximum-entropy property]\label{prop:maxent}
+Among all joint distributions on $\mathbb R^{d}$ whose coordinates have prescribed means $\mu_i$ and variances $\sigma_i^2$, the product of Gaussians $\prod_i\mathcal N(\mu_i,\sigma_i^2)$ uniquely maximizes the differential entropy, with $h=\tfrac12\sum_i\log(2\pi e\sigma_i^2)$.
+\end{proposition}
+\emph{Proof.} Subadditivity gives $h(\mathbf X)\le\sum_i h(X_i)$ with equality iff the coordinates are independent, and for fixed variance $h(X_i)\le\tfrac12\log(2\pi e\sigma_i^2)$ with equality iff $X_i$ is Gaussian. $\square$
+
+\begin{remark}
+The MaxEnt surrogate therefore matches only first- and second-order \emph{marginal} statistics; by construction it carries no cross-region, cross-time or cross-band covariance. The Shuffled control has the opposite property: it preserves the full marginal law of $\mathbf X$ and its within-trial covariance, but severs the pairing with the label ($I(\tilde{\mathbf X};Y)=0$). Taking the maximum over controls in $\dcausal$ makes the contrast conservative against both failure modes.
+\end{remark}
+
 Validation: global mean/std match the real data (std $\approx0.60$ in all conditions); mean
 within-session inter-trial correlation was $0.050$ (real), $0.048$ (shuffled), $0.009$ (MaxEnt)
-and $-0.001$ (random noise); task decodability of all controls was destroyed at chance level (Holm-corrected
+and $-0.001$ (random noise); task decodability of all controls was at chance (Holm-corrected
 $p=1.0$).
 
 \subsection{Models and alignment}
-The baseline student is a 2-layer GRU (hidden size 256, dropout 0.2) over token sequences.
-The brain encoder is an MLP over region-wise features with masked pooling (output dimension 32).
-A projection head maps the GRU's final hidden state to the same space, and we use a symmetric
-InfoNCE loss~\cite{oord2018infonce},
+The baseline student is a 2-layer GRU (hidden size 256, dropout 0.2) over token sequences, with final hidden state $\mathbf h_i$.
+The brain encoder applies a shared MLP $g_\phi$ to each region and a masked mean,
 \begin{equation}
-  \mathcal{L}=\mathcal{L}_{\text{task}}+\lambda\,\mathcal{L}_{\text{InfoNCE}},\qquad
-  \mathcal{L}_{\text{InfoNCE}}=-\tfrac{1}{B}\sum_{i}\log\frac{\exp(\operatorname{sim}(z_i,h_i)/\tau)}{\sum_j\exp(\operatorname{sim}(z_i,h_j)/\tau)},
+  \mathbf z_{sj}=\frac{\sum_{r=1}^{R}m_{sjr}\,g_\phi(\mathbf x_{sjr})}{\sum_{r=1}^{R}m_{sjr}}\in\mathbb R^{32},
+\end{equation}
+and a projection head $p_\psi$ maps $\mathbf h_i$ to $\mathbb R^{32}$. With $\ell_2$-normalized embeddings, $\operatorname{sim}(\mathbf a,\mathbf b)=\mathbf a^\top\mathbf b$, and a batch of $B_s$ pairs $(\mathbf z_i,\mathbf u_i)$ with $\mathbf u_i=p_\psi(\mathbf h_i)/\|p_\psi(\mathbf h_i)\|$, the symmetric InfoNCE loss~\cite{oord2018infonce} is
+\begin{equation}
+\begin{aligned}
+  \NCE&=\tfrac{1}{2B_s}\sum_{i=1}^{B_s}\big(\ell_i^{z\to u}+\ell_i^{u\to z}\big),\\
+  \ell_i^{z\to u}&=-\log\frac{\exp(\mathbf z_i^\top\mathbf u_i/\tau)}{\sum_{k=1}^{B_s}\exp(\mathbf z_i^\top\mathbf u_k/\tau)},
+\end{aligned}
+\end{equation}
+with $\ell_i^{u\to z}$ defined analogously. It lower-bounds the mutual information, $I(\mathbf z;\mathbf u)\ge\log B_s-\NCE$, and the total objective is
+\begin{equation}
+  \mathcal L(\theta,\psi,\phi)=\Ltask+\lambda\,\NCE,
 \end{equation}
 with $\tau=0.07$, $\lambda=0.1$ for the calibrated comparison (sweep: $\lambda\in\{0,0.01,0.1,0.5,1,2,5\}$),
-AdamW (learning rate $3\times10^{-3}$), batch size 64 and 5{,}000 steps. Representational
-similarity is measured with linear CKA~\cite{kornblith2019cka}. In the cross-architecture and
-region experiments we also evaluated a Transformer (pre-LayerNorm, 2 layers) and an RL agent (policy network with REINFORCE and advantage baseline).
-
-\subsection{Causal contrast and statistics}
+AdamW (learning rate $3\times10^{-3}$), batch size 64 and 5{,}000 steps. For the RL agent, $\Ltask$ is replaced by the REINFORCE surrogate with a baseline $b$,
 \begin{equation}
-  \dcausal=\mathrm{Acc}_{\text{real}}-\max\bigl(\mathrm{Acc}_{\text{MaxEnt}},\mathrm{Acc}_{\text{shuffled}},\mathrm{Acc}_{\text{RandNoise}}\bigr),
+  \nabla_\theta J=\E_{\pi_\theta}\!\big[(R-b)\,\nabla_\theta\log\pi_\theta(a\mid s)\big],
 \end{equation}
-computed on balanced accuracy across 5 random seeds (seeds 0--4) per condition and split. We report paired $t$-tests, 95\% bootstrap
-confidence intervals and Benjamini--Hochberg FDR correction~\cite{benjamini1995fdr}.
+which is unbiased for any $b$ independent of $a$ and reduces variance. The Transformer student is pre-LayerNorm with 2 layers.
+
+\textbf{Representational similarity.} For column-centered activation matrices $\mathbf X\in\mathbb R^{n\times p_1}$ (model) and $\mathbf Y\in\mathbb R^{n\times p_2}$ (brain embedding), linear CKA~\cite{kornblith2019cka} is
+\begin{equation}
+  \mathrm{CKA}(\mathbf X,\mathbf Y)=\frac{\|\mathbf Y^\top\mathbf X\|_F^2}{\|\mathbf X^\top\mathbf X\|_F\,\|\mathbf Y^\top\mathbf Y\|_F}\in[0,1].
+\end{equation}
+
+\subsection{Causal contrast and statistics}\label{sec:stats}
+Let $a_{c,s}$ be the balanced OOD accuracy of condition $c\in\mathcal C=\{\text{MaxEnt},\text{Shuffled},\text{RandNoise}\}$ at seed $s\in\{1,\dots,S\}$ ($S=5$), and $a_{\mathrm{R},s}$ that of the real condition. We use two estimators,
+\begin{align}
+  \hat\Delta^{(a)}&=\bar a_{\mathrm R}-\max_{c\in\mathcal C}\bar a_{c},\label{eq:da}\\
+  \hat\Delta^{(b)}&=\frac1S\sum_{s=1}^{S}d_s,\quad d_s=a_{\mathrm R,s}-\max_{c\in\mathcal C}a_{c,s},\label{eq:db}
+\end{align}
+where bars denote means over seeds. The aggregate estimator~\eqref{eq:da} equals the quantity written $\dcausal$ in the summary tables; the per-seed estimator~\eqref{eq:db} is the one used for paired inference.
+\begin{proposition}\label{prop:order}
+$\hat\Delta^{(b)}\le\hat\Delta^{(a)}$ for every data set.
+\end{proposition}
+\emph{Proof.} Let $c^\star=\arg\max_c\bar a_c$. Then $\max_c a_{c,s}\ge a_{c^\star,s}$ for each $s$, so $\tfrac1S\sum_s\max_c a_{c,s}\ge\bar a_{c^\star}=\max_c\bar a_c$; subtracting from $\bar a_{\mathrm R}$ gives the claim. $\square$
+
+Thus $\hat\Delta^{(a)}$ is optimistically biased relative to $\hat\Delta^{(b)}$ (a Jensen gap of order $\mathrm{SD}(a_c)$), and we report both. Inference on $\hat\Delta^{(b)}$ uses the paired $t$ statistic and percentile bootstrap over seed-level differences,
+\begin{equation}
+  t=\frac{\sqrt S\,\bar d}{s_d}\sim t_{S-1}\ \text{under }H_0\!:\E[d_s]=0,\qquad \mathrm{CI}_{95}=[\hat q_{0.025},\hat q_{0.975}],\label{eq:t}
+\end{equation}
+where $\hat q_\alpha$ are quantiles of the bootstrap distribution of $\bar d^{*}$. Multiplicity across $m$ hypotheses is controlled with the Benjamini--Hochberg adjusted value~\cite{benjamini1995fdr}
+\begin{equation}
+  q_{(i)}=\min_{j\ge i}\ \frac{m}{j}\,p_{(j)},\qquad p_{(1)}\le\cdots\le p_{(m)}.
+\end{equation}
+
+\textbf{Gain decomposition.} Let $G_c(\lambda)=\bar a_c(\lambda)-\bar a(0)$ be the gain of condition $c$ over the unaligned model. At a fixed $\lambda$ the baseline cancels, so
+\begin{equation}
+  \hat\Delta^{(a)}(\lambda)=G_{\mathrm R}(\lambda)-\max_{c\in\mathcal C}G_c(\lambda),\qquad \rho(\lambda)=\frac{\hat\Delta^{(a)}(\lambda)}{G_{\mathrm R}(\lambda)}, \label{eq:gain}
+\end{equation}
+i.e.\ $\dcausal$ is exactly the part of the B2M gain not reproduced by the best surrogate, and $\rho$ is the fraction of the gain attributable to brain-specific structure ($\rho=1$: purely biological; $\rho\le0$: purely generic regularization).
+
+\textbf{Anatomical effects.} For a region set $\mathcal R_0$ and region $r$, the single-region effect is $\hat\Delta_r=\bar a_{\mathrm R}(\{r\})-\max_{c}\bar a_c$ and the leave-one-out ablation effect is
+\begin{equation}
+  A_r=\bar a_{\mathrm R}(\mathcal R_0)-\bar a_{\mathrm R}(\mathcal R_0\setminus\{r\}),\label{eq:abl}
+\end{equation}
+so $A_r>0$ means region $r$ is necessary and $A_r<0$ means that removing it \emph{improves} accuracy.
+
+\textbf{Pooled correlation.} For $n$ points split in groups $g$ with weights $w_g=n_g/n$, the total sample covariance decomposes as
+\begin{equation}
+  S_{xy}=\underbrace{\sum_g w_g(\bar x_g-\bar x)(\bar y_g-\bar y)}_{\text{between groups}}+\underbrace{\sum_g w_g S^{(g)}_{xy}}_{\text{within groups}},\label{eq:pool}
+\end{equation}
+and likewise for variances, so a pooled Pearson $r$ can approach $1$ with a vanishing within-group correlation.
+
+\textbf{Probing.} A linear read-out $\hat s(\cdot)$ is scored by $\mathrm{AUC}=\Pr[\hat s(x^+)>\hat s(x^-)]$ (0.5 is chance), computed per patient and tested against a control with a one-sample $t$-test across patients.
+
+\textbf{Power.} For a paired test with $S$ seeds the minimum detectable effect at level $\alpha$ and power $1-\beta$ is approximately
+\begin{equation}
+  \mathrm{MDE}\approx\big(t_{1-\alpha/2,S-1}+t_{1-\beta,S-1}\big)\,\frac{\sigma_d}{\sqrt S}. \label{eq:mde}
+\end{equation}
 
 % =================================================================
 \section{Results}
 
-\ifshowflagged
-\begin{figure*}[!t]
-  \centering
-  \includegraphics[width=\textwidth]{Figure_1_Master_Synthesis_Overview.png}
-  \caption{CD-B2M Master Synthesis Overview. (A) Causal advantage $\dcausal$ across OOD splits showing significant transfer on novel set size 8. (B) Anatomical hierarchy and circuit specificity (Hippocampus $>$ Parahippocampal $>$ Lateral Temporal $>$ Amygdala). (C) Cross-architecture transfer under stabilized protocol. (D) Multi-cohort external replication on ds004789 under task-aligned serial-position split.}
-  \label{fig:synthesis}
-\end{figure*}
-\fi
-
 \subsection{Control validation}
-Figure~\ref{fig:spectrum} shows the mean band power of each control relative to the real data
-in every region. MaxEnt controls match first- and second-order statistics including 1/f spectral profiles, while task decodability is strictly eliminated across all controls.
+Figure~\ref{fig:spectrum} shows the mean band power of each control relative to the real data in every region. Residual offsets are small (at most about $0.013$ z-units) and region/band specific; MaxEnt matches the per-coordinate moments by construction but, per Proposition~\ref{prop:maxent}, not the covariance structure, while task decodability is eliminated in all controls.
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=\textwidth]{Figure_3_Spectral_Matching_and_MaxEnt_Validation.png}
@@ -247,35 +299,36 @@ in every region. MaxEnt controls match first- and second-order statistics includ
 \end{figure*}
 
 \subsection{RQ1: causal contrast against noise-matched controls}
-Figure~\ref{fig:forest} and Table~\ref{tab:rq1} summarize $\dcausal$ evaluated across OOD splits.
+Table~\ref{tab:rq1} and Fig.~\ref{fig:forest} report $\dcausal$ per split.
 \begin{table}[!htb]
 \centering\footnotesize
-\caption{$\dcausal$ (real $-$ best control) per split across 5 seeds, with 95\% bootstrap CI.}
+\setlength{\tabcolsep}{3pt}
+\caption{Causal contrast per split ($S=5$ seeds). $\hat\Delta^{(a)}$: aggregate, Eq.~\eqref{eq:da}; $\hat\Delta^{(b)}$: per-seed, Eq.~\eqref{eq:db}, with its 95\% bootstrap CI. $t$ and $p$ as reported by the evaluation pipeline.}
 \label{tab:rq1}
-\begin{tabular}{lrrl}
+\begin{tabular}{lrrcrr}
 \toprule
-Split & $\dcausal$ & 95\% CI & Verdict \\
+Split & $\hat\Delta^{(a)}$ & $\hat\Delta^{(b)}$ & 95\% CI of $\hat\Delta^{(b)}$ & $t$ & $p$ \\
 \midrule
-id\_4\_6 (ID)        & $-0.0057$ & $[-0.0220,+0.0140]$ & In-Distribution Baseline \\
-size\_8 (OOD)        & $+0.0260$ & $[+0.0160,+0.0280]$ & \textbf{Confirmed} ($p=0.028$) \\
-len\_10 (OOD)        & $+0.0104$ & $[-0.0050,+0.0120]$ & Moderate Gain \\
-len\_12 (OOD)        & $+0.0077$ & $[-0.0290,+0.0100]$ & Positive Trend \\
-unseen\_letters      & $-0.0230$ & $[-0.1140,+0.0470]$ & Item Alphabet Ceiling \\
+id\_4\_6 (ID)   & $-0.0057$ & $-0.0057$ & $[-0.022,+0.014]$ & --- & --- \\
+size\_8 (OOD)   & $+0.0260$ & $+0.0217$ & $[+0.016,+0.028]$ & $2.45$ & $0.028$ \\
+len\_10 (OOD)   & $+0.0104$ & $+0.0003$ & $[-0.005,+0.012]$ & $0.88$ & $0.301$ \\
+len\_12 (OOD)   & $+0.0077$ & $-0.0043$ & $[-0.029,+0.010]$ & $0.62$ & $0.704$ \\
+unseen\_letters & $-0.0230$ & $-0.0417$ & $[-0.114,+0.047]$ & $-0.74$ & $0.854$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\begin{figure}[!htb]
+\begin{figure*}[!t]
   \centering
-  \includegraphics[width=\columnwidth]{Figure_4_Causal_Transfer_and_Bootstrap_CIs.png}
-  \caption{Forest plot of $\dcausal$ with 95\% bootstrap CIs. The novel memory load split (\texttt{size\_8}) exhibits a statistically confirmed causal transfer advantage excluding zero ($p=0.028$).}
+  \includegraphics[width=0.8\textwidth]{Figure_4_Causal_Transfer_and_Bootstrap_CIs.png}
+  \caption{Forest plot of the per-seed contrast $\hat\Delta^{(b)}$ with 95\% bootstrap CIs. Only the novel memory load (\texttt{size\_8}) has a CI excluding zero.}
   \label{fig:forest}
-\end{figure}
+\end{figure*}
 
-On the primary working-memory load generalization axis (\texttt{size\_8}), real brain alignment outperforms the strongest noise-matched MaxEnt control by $\dcausal = +0.0260$ ($p = 0.028$, paired $t$-test, 95\% bootstrap CI $[+0.016, +0.028]$ strictly excluding zero). This demonstrates that biological representational alignment conveys structural inductive biases that exceed what can be explained by 1/f noise regularization.
+On \texttt{size\_8}, real alignment exceeds the strongest surrogate by $\hat\Delta^{(b)}=+0.0217$ (CI $[+0.016,+0.028]$) and $\hat\Delta^{(a)}=+0.0260$; the ordering of the two is the one guaranteed by Proposition~\ref{prop:order}. Three qualifications apply. (i) The remaining OOD splits are statistically indistinguishable from zero and \texttt{unseen\_letters} is negative. (ii) With $m=4$ OOD tests (or $m=5$ including ID), the BH-adjusted value of the smallest $p=0.028$ is $q=4\cdot0.028=0.112$ ($0.14$ for $m=5$), so the effect is not FDR-significant at 0.05. (iii) For $S=5$, $t=2.45$ in~\eqref{eq:t} corresponds to a two-sided $p\approx0.07$ under $t_4$, not $0.028$; the pipeline $p$-values for the five-seed tests should therefore be treated as uncorrected and possibly optimistic. The size-8 result is thus a promising but fragile signal. The ID row shows that alignment to real brain data improves on \emph{no} alignment ($0.714$ vs.\ $0.703$, $+0.0107$, $p=0.002$) while being below the best surrogate ($\hat\Delta=-0.0057$): in-distribution, the B2M gain is reproduced by surrogates, i.e.\ $\rho\le0$ in~\eqref{eq:gain}.
 
 \paragraph{Alignment strength.}
-Figure~\ref{fig:lambda} shows OOD accuracy as a function of alignment strength $\lambda$. Moderate alignment ($\lambda = 0.1$) achieves the optimal trade-off, maximizing causal transfer while preventing the alignment objective from dominating task gradients. Excessive regularization ($\lambda \ge 2.0$) forces latent collapse across all conditions.
+Figure~\ref{fig:lambda} shows OOD accuracy versus $\lambda$. All four conditions, including random noise, rise above the unaligned model ($\lambda=0$) for small $\lambda$ on \texttt{size\_8} (e.g.\ at $\lambda=0.01$ random noise is the highest curve), and all conditions degrade toward chance for $\lambda\ge2$. At $\lambda=0.1$ the conditions on \texttt{size\_8} lie within seed variability of each other, whereas on \texttt{len\_10} the real condition is highest ($\approx0.684$ vs.\ $\approx0.660$ for MaxEnt). In terms of~\eqref{eq:gain}, a large share of the B2M gain is therefore generic: $\max_cG_c(\lambda)$ is of the same order as $G_{\mathrm R}(\lambda)$ in this sweep. We selected $\lambda=0.1$ before the final comparison but note that the sweep itself was evaluated on the OOD splits (Sec.~\ref{sec:lim}).
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=\textwidth]{Figure_5_Lambda_Sweep_and_Optimal_Regularization.png}
@@ -283,150 +336,198 @@ Figure~\ref{fig:lambda} shows OOD accuracy as a function of alignment strength $
   \label{fig:lambda}
 \end{figure*}
 
-\paragraph{Representational geometry (CKA) predicts generalization.}
-Figure~\ref{fig:cka} shows the relationship between linear CKA representational similarity and downstream generalization accuracy. Across conditions, representational similarity to the human brain strongly and linearly correlates with out-of-distribution performance ($r = 0.99, p < 0.001$). Models aligned with genuine neural embeddings cluster in the high-CKA, high-accuracy regime, demonstrating that geometric alignment to human neural representations causally drives systematic generalization.
-
-\ifshowflagged
+\paragraph{Representational geometry (CKA).}
+Figure~\ref{fig:cka} plots linear CKA against OOD accuracy. The pooled correlation is $r=0.99$ ($p<0.001$), but the points form two well-separated clusters (real: CKA $\approx0.60$--$0.73$; controls: $\approx0.15$--$0.33$). By~\eqref{eq:pool}, such a layout makes $r$ dominated by the between-group term, so the pooled value reflects the real-versus-control difference and carries little information about whether CKA predicts accuracy \emph{within} a condition; moreover, the points are not independent (multiple seeds, splits and folds). We therefore interpret CKA as a descriptive diagnostic of alignment strength, not as evidence that geometry \emph{causes} generalization.
 \begin{figure}[!htb]
   \centering
   \includegraphics[width=\columnwidth]{Figure_2_CKA_Representational_Alignment.png}
-  \caption{Representational Geometry (CKA) Correlates with Generalization. Linear CKA between brain embeddings and model representations strongly predicts out-of-distribution generalization accuracy ($r = 0.99, p < 0.001$).}
+  \caption{Linear CKA between brain embeddings and model representations versus OOD accuracy (pooled $r=0.99$, driven by the between-cluster difference).}
   \label{fig:cka}
 \end{figure}
-\fi
 
-\subsection{RQ2: brain-region contributions and anatomical hierarchy}
-Table~\ref{tab:rq2} and Figures~\ref{fig:single}--\ref{fig:heat} report single-region alignment
-and leave-one-region-out ablation experiments.
+\subsection{RQ2: brain-region contributions}
+Table~\ref{tab:rq2} and Fig.~\ref{fig:single} report single-region alignment.
 \begin{table}[!htb]
 \centering\footnotesize
 \setlength{\tabcolsep}{3pt}
-\caption{Single-region alignment: OOD balanced accuracy across splits. Full-brain row for reference.}
+\caption{Single-region alignment: OOD balanced accuracy. $\hat\Delta_r$ is the contrast with the best surrogate on \texttt{size\_8}.}
 \label{tab:rq2}
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
-Aligned region & size\_8 & len\_10 & len\_12 & unseen \\
+Aligned region & size\_8 & len\_10 & len\_12 & unseen & $\hat\Delta_r$ (size\_8) \\
 \midrule
-Hippocampus            & \textbf{0.675} & 0.641 & 0.605 & 0.598 \\
-Parahippocampal        & 0.669 & 0.631 & 0.574 & 0.555 \\
-Amygdala               & 0.658 & 0.647 & 0.612 & 0.592 \\
-Lateral temporal       & 0.644 & 0.614 & 0.567 & 0.547 \\
+Hippocampus            & \textbf{0.675} & 0.641 & 0.605 & 0.598 & $+0.021$ \\
+Parahippocampal        & 0.669 & 0.631 & 0.574 & 0.555 & $+0.015$ \\
+Amygdala               & 0.658 & 0.647 & 0.612 & 0.592 & $+0.004$ \\
+Lateral temporal       & 0.644 & 0.614 & 0.567 & 0.547 & $-0.010$ \\
 \midrule
-Full brain (4 regions) & 0.667 & 0.626 & 0.573 & 0.582 \\
+Full brain (4 regions) & 0.667 & 0.626 & 0.573 & 0.582 & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-The hippocampus is confirmed as the top-performing individual region on novel working-memory loads (accuracy $0.6753$, $\dcausal = +0.0213$, $p = 0.012$), followed by the parahippocampal gyrus ($0.6693$, $\dcausal = +0.0153$, $p = 0.038$). In the regional ablation study (Fig.~\ref{fig:ablation}), selective removal of hippocampal electrodes causes the largest drop in OOD accuracy (mean ablation drop $-0.0159$, $p = 0.009$). 
 
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=\textwidth]{Figure_6A_Hippocampal_Specificity_Single_Region.png}
-  \caption{OOD accuracy when aligning to a single region (dashed = all four regions; error bars: seed variability). Hippocampus alignment alone exceeds the four-region full-brain ensemble on working-memory loads.}
+  \caption{OOD accuracy when aligning to a single region (dashed = all four regions; error bars: seed variability).}
   \label{fig:single}
 \end{figure*}
+
+On \texttt{size\_8}, the hippocampus gives the highest accuracy ($0.6753$, $\hat\Delta_r=+0.0213$, $p=0.012$), followed by the parahippocampal gyrus ($0.6693$, $+0.0153$, $p=0.038$), the amygdala ($+0.0037$, $p=0.42$) and lateral temporal cortex ($-0.0097$, $p=0.28$), giving the ordering Hippocampus $>$ Parahippocampal $>$ Amygdala $>$ Lateral Temporal. Note that this differs from an ordering that places the amygdala last: the amygdala exceeds lateral temporal cortex on all four splits in Table~\ref{tab:rq2}. The ranking is also split-dependent: the amygdala is highest on \texttt{len\_10} and \texttt{len\_12}. The hippocampus--parahippocampal gap ($0.006$) is within seed variability, and no pairwise region tests were run, so the hierarchy is descriptive.
+
+\paragraph{Ablation.}
+Table~\ref{tab:abl} gives the leave-one-out effect $A_r$ of Eq.~\eqref{eq:abl}.
+\begin{table}[!htb]
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{Leave-one-region-out ablation effect $A_r=\bar a_{\mathrm R}(\text{full})-\bar a_{\mathrm R}(\text{ablated})$; positive = region is necessary, negative = removal improves accuracy.}
+\label{tab:abl}
+\begin{tabular}{lccccc}
+\toprule
+Ablated region & size\_8 & len\_10 & len\_12 & unseen & mean \\
+\midrule
+Hippocampus      & $-0.012$ & $-0.024$ & $-0.021$ & $-0.006$ & $-0.016$ \\
+Amygdala         & $-0.002$ & $-0.008$ & $-0.018$ & $+0.025$ & $-0.001$ \\
+Parahippocampal  & $+0.012$ & $-0.013$ & $+0.007$ & $-0.002$ & $+0.001$ \\
+Lateral temporal & $+0.004$ & $+0.000$ & $-0.011$ & $-0.018$ & $-0.006$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 \begin{figure}[!htb]
   \centering
   \includegraphics[width=\columnwidth]{Figure_6B_Regional_Ablation_Impact.png}
-  \caption{Accuracy drop when each region is ablated (full $-$ ablated, mean across seeds). Hippocampus ablation induces the most severe generalization deficit, confirming its indispensable inductive role.}
+  \caption{Ablation effect $A_r$ per region and split (full $-$ ablated, mean across seeds). Negative bars mean that removing the region \emph{raised} accuracy.}
   \label{fig:ablation}
 \end{figure}
-\begin{figure}[!htb]
+The mean hippocampal effect is $A_{\mathrm{hip}}=-0.0159$ ($p=0.009$): it is the largest-magnitude effect, but its sign indicates that removing the hippocampus from the four-region input \emph{slightly improves} OOD accuracy. On \texttt{size\_8} only parahippocampal removal reduces accuracy ($+0.012$). Single-region sufficiency (hippocampal alignment alone is best) and leave-one-out necessity (hippocampal removal does not hurt) thus point in different directions, which is compatible with redundancy among regions or with hippocampal channels adding variance to the four-region ensemble, but not with the claim that the hippocampus is indispensable.
+
+\subsection{RQ3: cross-architecture transfer}
+We evaluated recurrent (SeqGRU), self-attention (SeqTransformer) and reinforcement-learning (RLAgent) students. Under the initial \emph{uncalibrated} alignment the contrast on \texttt{size\_8} was non-positive in every architecture (Fig.~\ref{fig:arch}; GRU $-0.000$, Transformer $-0.017$, RL $-0.050$, all CIs including zero). We then introduced a \emph{stabilized} protocol: calibrated $\lambda=0.1$, Pre-LayerNorm projection heads, advantage-baseline subtraction for policy gradients and memory-circuit pruning to the hippocampus and parahippocampal gyrus. Under it all three architectures show positive contrasts (Table~\ref{tab:arch}), with pooled $\hat\Delta=+0.025$ ($p=0.008$).
+\begin{figure*}[!t]
   \centering
-  \includegraphics[width=\columnwidth]{Figure_6C_Region_by_Split_Heatmap.png}
-  \caption{Region$\times$split heatmaps: (A) ablation drop across splits; (B) single-region utility normalized against full-brain accuracy.}
-  \label{fig:heat}
-\end{figure}
-
-Conversely, aligning with amygdalar electrodes provides negligible benefits for working-memory extrapolation ($\dcausal = +0.0037$, $p = 0.42$), and lateral temporal electrodes inject sensory noise ($\dcausal = -0.0097$). This confirms a biological hierarchy of transfer: Hippocampus $>$ Parahippocampal $>$ Lateral Temporal $>$ Amygdala, answering RQ2 in the affirmative.
-
-\subsection{RQ3: cross-architecture transfer and stabilized protocol}
-To test whether neural representational transfer is invariant across distinct inductive biases, we evaluated recurrent (SeqGRU), self-attention (SeqTransformer), and reinforcement-learning (RLAgent) architectures. Initial uncalibrated runs suffered from optimization fragility; however, introducing our **stabilized protocol** (calibrated $\lambda = 0.1$, Pre-LayerNorm projection heads, advantage baseline subtraction for policy gradients, and memory-circuit pruning to the hippocampus and parahippocampal gyrus) successfully confirms cross-architecture universality (Figures~\ref{fig:arch}, \ref{fig:archheat}).
-
-\begin{figure}[!htb]
-  \centering
-  \includegraphics[width=\columnwidth]{Figure_7A_Cross_Architecture_Causal_Transfer.png}
-  \caption{$\dcausal$ across model architectures under the stabilized alignment protocol. All three architecture classes achieve robust positive causal transfer on the novel working-memory load.}
+  \includegraphics[width=0.8\textwidth]{Figure_7A_Cross_Architecture_Causal_Transfer.png}
+  \caption{Causal contrast by architecture and OOD split under the initial \emph{uncalibrated} alignment (mean $\pm$ CI over seeds). Stabilized-protocol results are in Table~\ref{tab:arch}.}
   \label{fig:arch}
-\end{figure}
-\begin{figure}[!htb]
-  \centering
-  \includegraphics[width=\columnwidth]{Figure_7B_Cross_Architecture_Consistency_Heatmap.png}
-  \caption{Consistency matrix of $\dcausal$ across architectures and OOD splits.}
-  \label{fig:archheat}
-\end{figure}
-
-Under the stabilized protocol, all three architecture classes achieve positive causal transfer on the held-out set size 8 split: SeqGRU ($\dcausal = +0.021$, $p = 0.011$), SeqTransformer ($\dcausal = +0.025$, $p = 0.014$), and RLAgent ($\dcausal = +0.029$, $p = 0.007$), with a pooled mean $\dcausal = +0.025$ ($p = 0.008$, Table~\ref{tab:arch}). This proves that the biological computational prior discovered in the human hippocampus is computationally universal rather than tied to recurrent architectures.
-
+\end{figure*}
 \begin{table}[!htb]
 \centering\footnotesize
-\caption{Cross-Architecture Performance under the Stabilized Protocol on OOD Set Size 8.}
+\setlength{\tabcolsep}{2.5pt}
+\caption{Cross-architecture results on OOD size 8: uncalibrated contrast (Fig.~\ref{fig:arch}) versus stabilized protocol.}
 \label{tab:arch}
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
-Architecture & Real Acc & Control Acc & $\dcausal$ & $p$-value \\
+Architecture & Uncal.\ $\hat\Delta$ & Real & Control & Stab.\ $\hat\Delta$ & $p$ \\
 \midrule
-SeqGRU (Recurrent)     & 0.675 & 0.654 & $+0.021$ & 0.011 \\
-SeqTransformer (Attn)  & 0.670 & 0.645 & $+0.025$ & 0.014 \\
-RLAgent (Policy Grad)  & 0.572 & 0.543 & $+0.029$ & 0.007 \\
+SeqGRU         & $-0.000$ & 0.675 & 0.654 & $+0.021$ & 0.011 \\
+SeqTransformer & $-0.017$ & 0.670 & 0.645 & $+0.025$ & 0.014 \\
+RLAgent        & $-0.050$ & 0.572 & 0.543 & $+0.029$ & 0.007 \\
 \midrule
-Pooled Cross-Arch Mean & 0.639 & 0.614 & \textbf{+0.025} & \textbf{0.008} \\
+Pooled mean    & $-0.022$ & 0.639 & 0.614 & $\mathbf{+0.025}$ & 0.008 \\
+\bottomrule
+\end{tabular}
+\end{table}
+Because the stabilized protocol was designed \emph{after} observing the negative results, changes four factors at once, and prunes regions using the RQ2 findings on the same OOD split, the positive contrasts are exploratory; they show that a configuration exists in which all three students benefit, not that the benefit is architecture-invariant a priori.
+
+\subsection{H4: external replication on UPenn RAM (ds004789)}
+Under random validation splits, all conditions sat at the majority-class rate ($\approx0.76$, $\hat\Delta=-0.0008$, $p=0.913$; Fig.~\ref{fig:repl}); this evaluation was uninformative because all serial positions appeared in both partitions, and the CKA values were near zero ($<0.01$).
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{Figure_8_External_Multi_Cohort_Replication.png}
+  \caption{Initial replication on ds004789 with random validation splits: all conditions equal the majority-class rate ($\approx0.76$; dashed = chance), so no contrast is identifiable. The ``Phase 8 Reference'' entries are the discovery-cohort sanity check.}
+  \label{fig:repl}
+\end{figure*}
+We then defined a task-aligned serial-position OOD split (train on positions 1--8, test zero-shot on 9--12) and switched to balanced accuracy. Under the stabilized memory-circuit protocol, real alignment reaches $0.636\pm0.006$ against $0.610\pm0.003$ for MaxEnt, $\hat\Delta=+0.0260$ ($p=0.018$, CI $[+0.014,+0.038]$), with CKA $0.142$ versus $0.019$ for controls. Since the split and metric were changed after a null result, this is best read as a second, hypothesis-generating cohort in which the sign agrees with the discovery cohort, rather than a confirmatory replication.
+
+\subsection{RQ4: affective representation and dissociation}\label{sec:rq4}
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{Figure_9_RQ4_Emotion_Representation_and_Dissociation.png}
+  \caption{(A) Linear probing of error/conflict feedback from amygdala-aligned, hippocampus-aligned and noise-control latents (dashed = chance 0.5). (B) Memory-load correlation of neural theta power (left) and working-memory contrast $\dcausal$ (right) for hippocampus and amygdala.}
+  \label{fig:rq4}
+\end{figure*}
+We probed latents of models aligned to amygdalar electrodes (165 channels, 10 patients) during the probe epoch for error/conflict feedback (Fig.~\ref{fig:rq4}A). The amygdala probe reaches $\mathrm{AUC}=0.5706\pm0.0562$ against $0.4281\pm0.0291$ for the noise control ($t=4.22$, $p=0.002$; $n=10$ patients). The hippocampal probe is not above chance ($\mathrm{AUC}=0.5172$, $p=0.284$). Relative to the theoretical chance level $0.5$ the amygdala margin is $+0.071$; the headline $+0.143$ ($+14.3\%$) includes a control that sits \emph{below} chance, which indicates a systematic bias in the control probe.
+
+For the functional contrast (Fig.~\ref{fig:rq4}B), hippocampal alignment gives $\dcausal=+0.020$ and amygdalar alignment $\dcausal=-0.037$ on working-memory extrapolation ($t=5.16$, $p=0.0003$). However, the correlation between neural theta power and set size is \emph{larger} in the amygdala ($r=0.138$) than in the hippocampus ($r=0.073$), so the cognitive half of the dissociation is not selective. Together with the transfer asymmetry and the affect-probe asymmetry, the data support a partial, suggestive dissociation only. The amygdala figure $-0.037$ also differs from the $+0.004$ obtained in the single-region analysis (Table~\ref{tab:rq2}), which used a different experimental batch.
+
+% =================================================================
+\section{Discussion}
+\paragraph{Evidence summary.} Table~\ref{tab:status} summarizes the status of each hypothesis against the pre-stated criteria.
+\begin{table}[!htb]
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{Evidence status.}
+\label{tab:status}
+\begin{tabular}{lp{5.2cm}}
+\toprule
+Claim & Status \\
+\midrule
+H1 / RQ1 & Partial: size\_8 only, CI excludes 0; $q\approx0.11$; null elsewhere \\
+H2 / RQ2 & Partial: single-region ranking supported; ablation contradicts necessity \\
+H3 / RQ3 & Exploratory: negative uncalibrated, positive after post hoc stabilization \\
+H4 & Exploratory: null (random split); positive (post hoc split) \\
+RQ4 & Suggestive: probe above chance, confounded by load \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{H4: multi-cohort external replication on UPenn RAM (ds004789)}
-We tested external validity on the UPenn RAM \texttt{ds004789} dataset (29 patients, 6{,}122 free-recall trials; Fig.~\ref{fig:repl}). In an initial uncalibrated evaluation using random validation splits, all conditions remained near the majority-class rate ($\approx 0.76$, $\dcausal = -0.0008$, $p = 0.913$), which was confounded because all serial positions appeared in both train and validation partitions.
+\paragraph{Genuine transfer versus structured-noise regularization.}
+The causal contrast is designed so that, by~\eqref{eq:gain}, whatever a high-dimensional structured signal can give through regularization alone is subtracted. What remains is small ($\approx0.02$--$0.03$ balanced accuracy) and appears on one of four OOD splits. The ID comparison and the $\lambda$ sweep show that a substantial part of the B2M gain over the unaligned model is reproduced by surrogates, including random noise at small $\lambda$. This is consistent with the possibility that B2M gains are mostly generic regularization with a modest brain-specific component on novel loads; our evidence is insufficient to establish that component firmly (Sec.~\ref{sec:lim}). The CKA analysis is descriptive.
 
-\begin{figure}[!htb]
-  \centering
-  \includegraphics[width=\columnwidth]{Figure_8_External_Multi_Cohort_Replication.png}
-  \caption{External replication on ds004789 (UPenn RAM, stabilized protocol). Left: OOD accuracy by condition across serial positions 9--12. Right: CKA vs.\ OOD accuracy scatter ($\dcausal = +0.026$, $p = 0.018$).}
-  \label{fig:repl}
-\end{figure}
+\paragraph{Anatomical interpretation.}
+That hippocampal-only alignment is the best single-region teacher on novel loads agrees with work showing that persistent hippocampal activity and hippocampal--cortical coupling track working-memory load~\cite{boran2019sciadv}. However, because the leave-one-out ablation does not reduce accuracy, we do not claim that the hippocampus is necessary for transfer in our setting.
 
-When evaluated using a **task-aligned serial-position OOD split** (training on early serial positions 1--8 and evaluating zero-shot on held-out positions 9--12) under the stabilized memory-circuit protocol, Real Brain alignment achieves $0.636 \pm 0.006$ OOD balanced accuracy compared to $0.610 \pm 0.003$ for MaxEnt controls, yielding a statistically significant causal advantage of $\dcausal = +0.0260$ ($p = 0.018$, paired $t$-test, 95\% bootstrap CI $[+0.014, +0.038]$ strictly excluding zero). Furthermore, real-brain CKA similarity reaches $0.142$ versus $0.019$ for controls. This confirms that the CD-B2M transfer benefit successfully replicates across independent clinical cohorts and cognitive paradigms when the evaluation split is aligned to task-relevant OOD dynamics.
-
-\subsection{RQ4: affective representation and double dissociation}\label{sec:rq4}
-\begin{figure}[!htb]
-  \centering
-  \includegraphics[width=\columnwidth]{Figure_9_RQ4_Emotion_Representation_and_Dissociation.png}
-  \caption{RQ4 Emotion Representation and Double Dissociation. (A) Linear probing of error/conflict from amygdala, hippocampus and noise control latent spaces. (B) Double dissociation: Hippocampus selectively tracks working-memory load, while Amygdala captures affective error conflict.}
-  \label{fig:rq4}
-\end{figure}
-
-To investigate whether models acquire affective representations, we conducted linear readout probing on the latent representations of models aligned to amygdalar electrodes (165 channels across 10 patients) during probe evaluation (Fig.~\ref{fig:rq4}A). The amygdala probe successfully decodes error/conflict feedback with ROC-AUC $= 0.5706 \pm 0.0562$, significantly exceeding noise controls ($0.4281 \pm 0.0291$, a $+14.3\%$ advantage, $t = 4.22, p = 0.002$). Conversely, hippocampal representations show no affective decoding capability above chance ($\text{AUC} = 0.5172, p = 0.284$).
-
-Crucially, this analysis demonstrates a **double dissociation** between limbic and memory circuits (Fig.~\ref{fig:rq4}B):
-\begin{itemize}
-  \item \textbf{Hippocampus:} Encodes memory load ($r = 0.073$, $p = 3\times 10^{-4}$), driving positive working-memory generalization ($\dcausal = +0.020$), but does not decode affective conflict.
-  \item \textbf{Amygdala:} Encodes affective error feedback (AUC $= 0.571, p = 0.002$), but actively interferes with symbolic working-memory extrapolation when aligned ($\dcausal = -0.037$).
-\end{itemize}
-This double dissociation ($t = 5.16, p = 0.0003$) confirms that B2M alignment selectively transmits distinct computational structures (cognitive memory indexing vs.\ affective error monitoring) according to anatomical circuit specificity.
+\paragraph{Role of stabilization.}
+Alignment gradients can destabilize attention and policy-gradient optimization when applied naively. The stabilized protocol removes the negative contrasts, but, being post hoc, its benefit must be confirmed on data not used to design it.
 
 % =================================================================
-\section{Discussion}
-\paragraph{Genuine computational transfer vs.\ structured-noise regularization.}
-The central objective of the CD-B2M project was to resolve whether representational alignment to human brain recordings reflects genuine transfer of biological computational structure or merely acts as a structured-noise regularizer. By introducing Maximum-Entropy (MaxEnt) surrogates that exactly match the 1/f spectral power distribution and channel cross-covariance of real brain recordings, CD-B2M establishes that real brain alignment produces a statistically significant out-of-distribution advantage ($\dcausal = +0.026$, $p = 0.028$) that cannot be reproduced by spectral noise alone. The strong correlation between representational geometry (CKA) and downstream generalization ($r = 0.99, p < 0.001$) further corroborates that the acquisition of brain-like geometry causally fosters systematic out-of-distribution transfer.
+\section{Limitations}\label{sec:lim}
+We observed the following limitations in our own experiments and analyses.
 
-\paragraph{Anatomical circuit specificity and memory mechanisms.}
-Our findings demonstrate that B2M transfer is highly circuit-specific. The hippocampus emerged as the primary computational hub for working-memory generalization: hippocampal alignment alone achieved the highest OOD accuracy ($0.675$), and its selective ablation caused the most severe performance degradation ($-0.0159$, $p = 0.009$). This aligns with clinical neurophysiology showing that persistent theta-gamma phase coupling in the human medial temporal lobe supports item maintenance across memory loads~\cite{boran2019sciadv}.
+\paragraph{Cohort size and the cross-patient inference unit.}
+Only 15 patients are available, with about three per held-out fold, and electrode coverage differs widely (426, 165, 150 and 1{,}520 channels per region; regions missing in a session are masked). Cross-patient alignment must therefore average over heterogeneous anatomy, and population-averaged band power discards electrode-level identity. More importantly, the $t$-tests and bootstrap treat \emph{seeds} as the sampling unit, so they quantify optimization variance for a fixed set of patients and synthetic test sets, not sampling variance over patients. Inference that generalizes across patients would require a patient-level bootstrap or permutation test, which we did not run. In addition, for $S=5$ the reported $(t,p)$ pairs are not mutually consistent with $t_{4}$ (e.g.\ $t=2.45$ implies $p\approx0.07$ two-sided, not $0.028$).
 
-\paragraph{Architecture invariance and the necessity of stabilization.}
-Initial negative results across architectures highlighted that neural alignment cannot be treated as an unconstrained plug-and-play auxiliary loss. Without proper normalization and channel selection, alignment gradients can destabilize self-attention and reinforcement-learning optimization. However, once stabilized with Pre-LayerNorm projection heads, calibrated alignment strength ($\lambda = 0.1$), advantage baseline subtraction, and memory-circuit pruning, all three model families (recurrent, Transformer, and policy-gradient RL) exhibited positive causal transfer (mean $\dcausal = +0.025$, $p = 0.008$). This demonstrates that the biological inductive bias is fundamentally architecture-invariant.
+\paragraph{Statistical power and multiplicity.}
+With $S=5$ and the implied standard deviation of the paired differences $\sigma_d\approx0.02$ (from $t$ and $\hat\Delta^{(b)}$), Eq.~\eqref{eq:mde} at $\alpha=0.05$ and 80\% power gives $\mathrm{MDE}\approx0.03$, larger than the observed size-8 effect; the study is underpowered for effects of the size reported, and significant results under low power are prone to exaggerated effect sizes. We ran many comparisons (splits, regions, architectures, probes) but corrected only within some families; across splits the size-8 effect does not survive BH correction.
 
-\paragraph{Multi-cohort replication and affective double dissociation.}
-External replication on the UPenn RAM cohort (ds004789) confirmed that the CD-B2M transfer advantage replicates in independent patient populations when using task-aligned serial-position OOD splits ($\dcausal = +0.026$, $p = 0.018$). Finally, the double dissociation between hippocampal memory indexing and amygdalar affective processing resolves RQ4: neural representational alignment is capable of transferring both cognitive and affective computational structures, provided the target circuits match the downstream computational objective.
+\paragraph{Post hoc choices and selection on evaluation data.}
+The value of $\lambda$ was chosen from a sweep evaluated on the OOD splits; the memory-circuit pruning (hippocampus plus parahippocampal gyrus) was motivated by RQ2 results on the same \texttt{size\_8} split; the stabilized protocol was introduced after negative results; and the replication split and metric were redefined after a null result. Each of these is a researcher degree of freedom that can inflate the apparent effect. A clean test requires nested model selection or a pre-registered, untouched confirmation set.
 
-\paragraph{Limitations.}
-Several limitations should be noted. First, the discovery cohort is limited to 15 surgical patients, an unavoidable constraint of invasive human intracranial recordings. While multi-seed evaluation and bootstrap confidence intervals confirm statistical robustness, broader normative validation remains desirable. Second, alignment is performed on population-averaged frequency-band power features; future architectures utilizing raw Local Field Potential (LFP) waveforms or spike-timing dynamics may extract even richer representations. Third, affective probing (RQ4) employs linear readouts; future investigations should evaluate causal intervention on affective policy networks.
+\paragraph{Strength and fidelity of the controls.}
+The MaxEnt surrogate matches only per-coordinate means and variances (Proposition~\ref{prop:maxent}); it does not reproduce the 1/f spectrum shape across bands, nor cross-region or temporal covariance, and Fig.~\ref{fig:spectrum} shows residual spectral offsets. A real-versus-MaxEnt gap may therefore reflect covariance structure that is unrelated to task content. Stronger surrogates, such as covariance-matched Gaussians, phase-randomized or amplitude-adjusted surrogates, and brain data swapped across patients, were not tested.
+
+\paragraph{Generic regularization remains a competing explanation.}
+Random noise improves OOD accuracy over $\lambda=0$ at small $\lambda$, and ID gains over no alignment are exceeded by surrogates. Our contrast isolates only the residual, and the CI for it excludes zero on one split.
+
+\paragraph{Surrogate task and pairing.}
+The synthetic letter-set task is not the stimulus sequence the patients saw, so the pairing of brain trials and student sequences is not stimulus-identical; the model can profit only from coarse trial-level structure such as load, and the test is far from the clinical task. \texttt{unseen\_letters} gives negative contrasts, and OOD splits differ in difficulty, with some close to chance.
+
+\paragraph{Correlational nature of CKA.}
+The reported $r=0.99$ is a pooled, two-cluster statistic over non-independent points (Eq.~\eqref{eq:pool}); it does not establish that geometry drives generalization.
+
+\paragraph{Regional analysis.}
+Region contrasts compare channel sets of very different sizes and signal-to-noise ratios; the hierarchy depends on the split (the amygdala is best on two splits), differences among top regions lie within seed variability, and the single-region and ablation analyses disagree (Section~\ref{sec:rq4} and Table~\ref{tab:abl}).
+
+\paragraph{Cross-architecture comparability.}
+The stabilization changes four factors simultaneously, without an ablation of which one matters; architectures differ in capacity, optimization and metric ceiling (RL accuracy is $\approx0.10$ lower), so the pooled mean mixes non-comparable scales.
+
+\paragraph{Replication scope.}
+ds004789 is a free-recall paradigm with a different task structure, a majority-class rate of $0.76$, and a serial-position ``OOD'' notion that is not the same construct as the novel set size in the discovery cohort; the replication metric and split changed after the initial null result.
+
+\paragraph{Affective probing.}
+``Error feedback'' is a behavioural outcome, not an affective state; no emotional stimuli or self-report were used. Error rate depends strongly on load (0.977, 0.903 and 0.845 accuracy for sizes 4, 6, 8) and the amygdala carries a load signal of comparable or greater size than the hippocampus ($r=0.138$ vs.\ $0.073$), so probe performance may reflect load rather than affect; stratifying the AUC by set size is needed. The control AUC is below chance ($0.428$), the probes read out model latents, not neural data, and the amygdala and hippocampal analyses use different numbers of patients (10 and 15).
+
+\paragraph{Feature and preprocessing choices.}
+Features are band-power in 0.5\,s bins, per-session normalization is transductive, and acquisition rates differ across patients; raw LFP, phase or spike-timing information is not used.
+
+\paragraph{Reproducibility across batches.}
+The same condition varies across experiment batches (e.g.\ full-brain size-8 accuracy $0.667$ in Table~\ref{tab:rq2} versus $0.68$ in the main comparison; MaxEnt control $\approx0.654$ in the contrast table versus a higher value in the $\lambda$-sweep; amygdala $\dcausal$ of $+0.004$ vs.\ $-0.037$), indicating run-to-run variance that is larger than the effects we claim and needs to be reconciled with fixed seeds and configurations.
 
 \paragraph{Future work.}
-Promising directions include: (i) end-to-end adaptive alignment schedulers that dynamically modulate $\lambda$ based on gradient conflict; (ii) multi-task neural foundation models pre-trained across diverse cognitive iEEG cohorts; and (iii) closing the loop by transferring model representations back into adaptive closed-loop neuromodulation systems for memory remediation.
+Patient-level resampling, pre-registered confirmation, stronger surrogates (covariance- and phase-preserving), within-patient versus cross-patient comparisons, factor-wise ablation of the stabilization, and load-stratified affective probing.
 
 % =================================================================
 \section{Conclusion}
-We introduced CD-B2M, a rigorous causal framework designed to determine whether brain-to-model transfer reflects authentic computational structure or structured-noise regularization. Across comprehensive empirical evaluations covering all four research questions and multi-cohort replication, our results demonstrate that: (i) real brain alignment causally improves out-of-distribution generalization beyond spectral noise surrogates ($\dcausal = +0.026, p = 0.028$); (ii) the benefit is anatomically localized to hippocampal memory circuits; (iii) the effect generalizes across recurrent, Transformer, and RL architectures under a stabilized alignment protocol; (iv) external replication succeeds on independent multi-cohort datasets (UPenn RAM); and (v) emotion learning representations are decodable from the amygdala and exhibit a clean double dissociation from memory indexing. These findings confirm that neural representational alignment provides a genuine, biologically inspired computational inductive bias for artificial intelligence.
+We introduced CD-B2M, a framework that formalizes the contrast between real-brain alignment and noise-matched surrogates, together with a gain decomposition that separates generic regularization from brain-specific structure. In a cross-patient evaluation on ds004752, real iEEG alignment outperformed the strongest surrogate on a novel working-memory load ($\hat\Delta^{(b)}=+0.022$, CI $[+0.016,+0.028]$), hippocampal alignment was the best single-region teacher, and a stabilized protocol gave positive contrasts in recurrent, Transformer and RL students. However, the effect was confined to one OOD split, did not survive multiplicity correction, was not supported by hippocampal ablation, rested on post hoc design choices in the architecture and replication analyses, and a sizable share of the B2M gain was reproduced by noise. The evidence therefore supports a cautious reading: B2M alignment may contribute a small brain-specific component beyond structured-noise regularization, but confirming it requires patient-level inference, stronger controls and confirmatory data.
 
 % =================================================================
 \balance
@@ -456,11 +557,4 @@ We introduced CD-B2M, a rigorous causal framework designed to determine whether 
   Controlling the false discovery rate. \emph{J. R. Stat. Soc. B}, 57(1):289--300, 1995.
 \end{thebibliography}
 
-% =================================================================
-% NOTES FOR THE TEAM:
-% 1. All publication figures (Figures 1 through 9) are fully generated, verified,
-%    and synchronized with the experimental outputs and master summary CSVs.
-% 2. All four Research Questions (RQ1, RQ2, RQ3, RQ4) and Hypothesis H4 (External
-%    Replication) are confirmed with rigorous statistical tests (bootstrap CIs and paired t-tests).
-% 3. The LaTeX code compiles cleanly with pdfLaTeX on Overleaf.
 \end{document}
